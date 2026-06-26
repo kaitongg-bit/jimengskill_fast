@@ -1,0 +1,1009 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>视频抽帧归档工具</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --ink: #17202a;
+      --muted: #657281;
+      --line: #d9e0e7;
+      --accent: #0f766e;
+      --accent-2: #0b5f59;
+      --warn: #9a3412;
+      --bad: #b91c1c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+    }
+    main {
+      width: min(1180px, calc(100vw - 32px));
+      margin: 24px auto 40px;
+    }
+    h1 {
+      font-size: 24px;
+      margin: 0 0 6px;
+    }
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 16px;
+      margin-top: 18px;
+      align-items: start;
+    }
+    section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      margin: 14px 0 6px;
+    }
+    label:first-child { margin-top: 0; }
+    input, textarea, select, button {
+      font: inherit;
+    }
+    input[type="file"], input[type="text"], input[type="number"], textarea, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 9px 10px;
+      background: white;
+      color: var(--ink);
+    }
+    textarea {
+      min-height: 76px;
+      resize: vertical;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    button {
+      border: 0;
+      border-radius: 6px;
+      padding: 10px 13px;
+      background: var(--accent);
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button.secondary {
+      background: #e8eef2;
+      color: #22313f;
+    }
+    button:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+    .status {
+      margin-top: 14px;
+      padding: 10px;
+      border-radius: 6px;
+      background: #eef8f6;
+      color: var(--accent-2);
+      font-size: 13px;
+      white-space: pre-wrap;
+    }
+    .status.warn {
+      background: #fff7ed;
+      color: var(--warn);
+    }
+    .status.bad {
+      background: #fef2f2;
+      color: var(--bad);
+    }
+    video {
+      width: 100%;
+      max-height: 320px;
+      background: #111827;
+      border-radius: 6px;
+      margin-top: 12px;
+    }
+    .previewHeader {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .previewHeader h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+    .meta {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 12px;
+    }
+    .frame {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      overflow: hidden;
+      background: white;
+    }
+    .frame.excluded {
+      opacity: .45;
+      filter: grayscale(.85);
+    }
+    .frame.excluded img {
+      opacity: .7;
+    }
+    .frame img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      object-fit: contain;
+      background: #111827;
+    }
+    .frame .caption {
+      padding: 7px 8px;
+      font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    .frame .caption span {
+      min-width: 0;
+    }
+    .frameActions {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .tinyBtn {
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      padding: 4px 7px;
+      background: #f8fafc;
+      color: #22313f;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .tinyBtn.delete {
+      color: #b91c1c;
+    }
+    .tinyBtn.restore {
+      color: var(--accent-2);
+    }
+    .frame a {
+      color: var(--accent-2);
+      font-weight: 700;
+      text-decoration: none;
+    }
+    .hint {
+      font-size: 12px;
+      margin-top: 8px;
+    }
+    .checkline {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 14px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .checkline input {
+      width: auto;
+    }
+    .transcriptBox {
+      margin-top: 8px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fbfcfd;
+    }
+    .transcriptBox[hidden] {
+      display: none;
+    }
+    .progress {
+      height: 8px;
+      border-radius: 99px;
+      background: #e5e7eb;
+      margin-top: 12px;
+      overflow: hidden;
+    }
+    .bar {
+      width: 0%;
+      height: 100%;
+      background: var(--accent);
+      transition: width .2s ease;
+    }
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <h1>视频抽帧归档工具</h1>
+  <p>本工具在浏览器本地运行，不上传视频。默认不 OCR、不转写，只做抽帧、总览图和归档说明。</p>
+
+  <div class="layout">
+    <section>
+      <label for="videoFile">录屏/视频文件</label>
+      <input id="videoFile" type="file" accept="video/*">
+
+      <label for="sourceUrl">原链接/来源文案</label>
+      <textarea id="sourceUrl" placeholder="粘贴抖音/小红书链接、原始标题、标签等"></textarea>
+
+      <label class="checkline" for="transcribeAudio">
+        <input id="transcribeAudio" type="checkbox">
+        需要音频转文字
+      </label>
+      <div id="transcriptBox" class="transcriptBox" hidden>
+        <label for="transcriptText">已有转写稿/备注</label>
+        <textarea id="transcriptText" placeholder="如果你已经用剪映、飞书妙记、Whisper 等工具转好了，可以粘贴在这里；没有就空着，归档里会标记“待转写”。"></textarea>
+        <p class="hint">浏览器本地无法稳定内置语音识别。勾选后会在归档中加入转写需求，并尽量导出 audio.wav 供后续转写。</p>
+      </div>
+
+      <label for="caseName">归档名称</label>
+      <input id="caseName" type="text" value="V001_未命名视频">
+
+      <div class="row">
+        <div>
+          <label for="intervalSec">短视频间隔秒数</label>
+          <input id="intervalSec" type="number" min="1" max="30" value="5">
+        </div>
+        <div>
+          <label for="maxFrames">最多帧数</label>
+          <input id="maxFrames" type="number" min="1" max="30" value="10">
+        </div>
+      </div>
+
+      <label for="mode">抽帧模式</label>
+      <select id="mode">
+        <option value="auto">自动：先测试跳帧，失败则实时播放</option>
+        <option value="seek">快速跳帧：适合普通 MP4</option>
+        <option value="realtime">实时播放：适合不支持跳帧的录屏 MOV</option>
+      </select>
+
+      <div class="actions">
+        <button id="runBtn">开始抽帧</button>
+        <button id="saveBtn" class="secondary" disabled>保存归档</button>
+        <button id="zipBtn" class="secondary" disabled>下载 ZIP 归档</button>
+        <button id="downloadBtn" class="secondary" disabled>下载总览图</button>
+      </div>
+
+      <div class="progress"><div id="bar" class="bar"></div></div>
+      <div id="status" class="status">等待选择视频。</div>
+      <p class="hint">“保存归档”需要浏览器授权写入文件夹；如果授权失败，优先用“下载 ZIP 归档”。</p>
+
+      <video id="video" muted playsinline controls></video>
+    </section>
+
+    <section>
+      <div class="previewHeader">
+        <div>
+          <h2>抽帧预览</h2>
+          <div id="meta" class="meta">暂无视频信息</div>
+        </div>
+      </div>
+      <div id="grid"></div>
+    </section>
+  </div>
+</main>
+
+<canvas id="workCanvas" hidden></canvas>
+
+<script>
+  const els = {
+    file: document.getElementById("videoFile"),
+    sourceUrl: document.getElementById("sourceUrl"),
+    transcribeAudio: document.getElementById("transcribeAudio"),
+    transcriptBox: document.getElementById("transcriptBox"),
+    transcriptText: document.getElementById("transcriptText"),
+    caseName: document.getElementById("caseName"),
+    intervalSec: document.getElementById("intervalSec"),
+    maxFrames: document.getElementById("maxFrames"),
+    mode: document.getElementById("mode"),
+    runBtn: document.getElementById("runBtn"),
+    saveBtn: document.getElementById("saveBtn"),
+    zipBtn: document.getElementById("zipBtn"),
+    downloadBtn: document.getElementById("downloadBtn"),
+    status: document.getElementById("status"),
+    bar: document.getElementById("bar"),
+    video: document.getElementById("video"),
+    grid: document.getElementById("grid"),
+    meta: document.getElementById("meta"),
+    canvas: document.getElementById("workCanvas")
+  };
+
+  let objectUrl = "";
+  let frames = [];
+  let contactSheetBlob = null;
+  let manifest = null;
+  let lastMethod = "";
+  let audioExportStatus = "not_requested";
+
+  function keptFrames() {
+    return frames.filter(frame => !frame.excluded);
+  }
+
+  function setStatus(text, kind = "") {
+    els.status.textContent = text;
+    els.status.className = `status ${kind}`.trim();
+  }
+
+  function setProgress(done, total) {
+    const pct = total ? Math.min(100, Math.round(done / total * 100)) : 0;
+    els.bar.style.width = `${pct}%`;
+  }
+
+  function safeName(text) {
+    return (text || "未命名视频")
+      .trim()
+      .replace(/[\\/:*?"<>|#%{}$!'@+`=]/g, "_")
+      .replace(/\s+/g, "_")
+      .slice(0, 80) || "未命名视频";
+  }
+
+  function waitFor(target, event, timeoutMs = 15000) {
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        cleanup();
+        reject(new Error(`等待 ${event} 超时`));
+      }, timeoutMs);
+      const done = () => {
+        cleanup();
+        resolve();
+      };
+      const fail = () => {
+        cleanup();
+        reject(els.video.error || new Error("视频加载失败"));
+      };
+      const cleanup = () => {
+        clearTimeout(timer);
+        target.removeEventListener(event, done);
+        els.video.removeEventListener("error", fail);
+      };
+      target.addEventListener(event, done, { once: true });
+      els.video.addEventListener("error", fail, { once: true });
+    });
+  }
+
+  async function ensureMetadata() {
+    if (els.video.readyState < 1) {
+      await waitFor(els.video, "loadedmetadata");
+    }
+    if (!Number.isFinite(els.video.duration) || els.video.duration <= 0) {
+      throw new Error("无法读取视频时长");
+    }
+    els.meta.textContent = `时长 ${els.video.duration.toFixed(1)} 秒，尺寸 ${els.video.videoWidth}×${els.video.videoHeight}`;
+  }
+
+  function buildTargetTimes(duration) {
+    const interval = Number(els.intervalSec.value) || 5;
+    const maxFrames = Number(els.maxFrames.value) || 10;
+    if (duration <= interval * maxFrames) {
+      const values = [];
+      for (let t = Math.min(0.5, duration / 2); t < duration && values.length < maxFrames; t += interval) {
+        values.push(Math.min(t, duration - 0.05));
+      }
+      return values;
+    }
+    return Array.from({ length: maxFrames }, (_, i) => duration * (i + 0.5) / maxFrames);
+  }
+
+  async function seekTo(seconds) {
+    const pending = waitFor(els.video, "seeked", 12000);
+    els.video.currentTime = seconds;
+    await pending;
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    return Math.abs(els.video.currentTime - seconds) < 0.75;
+  }
+
+  function captureFrame(index, targetTime, actualTime) {
+    const video = els.video;
+    const canvas = els.canvas;
+    const maxWidth = 1280;
+    const scale = Math.min(1, maxWidth / video.videoWidth);
+    canvas.width = Math.max(2, Math.round(video.videoWidth * scale));
+    canvas.height = Math.max(2, Math.round(video.videoHeight * scale));
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const dataUrl = canvas.toDataURL("image/png");
+    return {
+      index,
+      targetTime,
+      actualTime,
+      width: canvas.width,
+      height: canvas.height,
+      dataUrl,
+      filename: `frame_${String(index).padStart(2, "0")}_${actualTime.toFixed(1)}s.png`
+    };
+  }
+
+  async function testSeek(times) {
+    if (times.length < 2) return true;
+    const target = times[Math.min(1, times.length - 1)];
+    const ok = await seekTo(target);
+    return ok;
+  }
+
+  async function extractBySeek(times) {
+    const out = [];
+    for (let i = 0; i < times.length; i += 1) {
+      const ok = await seekTo(times[i]);
+      if (!ok) {
+        throw new Error(`跳帧失败：目标 ${times[i].toFixed(1)}s，实际 ${els.video.currentTime.toFixed(1)}s`);
+      }
+      out.push(captureFrame(i + 1, times[i], els.video.currentTime));
+      setProgress(i + 1, times.length);
+      setStatus(`快速抽帧中：${i + 1}/${times.length}`);
+    }
+    return out;
+  }
+
+  async function extractRealtime(times) {
+    const out = [];
+    els.video.currentTime = 0;
+    await waitFor(els.video, "seeked", 12000).catch(() => {});
+    els.video.muted = true;
+    els.video.playbackRate = Math.min(4, Math.max(1, Number(els.video.playbackRate) || 1));
+    await els.video.play();
+    let next = 0;
+    setStatus("实时播放抽帧中：这一步会消耗一段播放时间，但对特殊 MOV 更稳。", "warn");
+    return await new Promise((resolve, reject) => {
+      const timer = setInterval(() => {
+        const current = els.video.currentTime;
+        while (next < times.length && current >= times[next]) {
+          out.push(captureFrame(next + 1, times[next], current));
+          next += 1;
+          setProgress(next, times.length);
+          setStatus(`实时播放抽帧中：${next}/${times.length}，当前 ${current.toFixed(1)}s`);
+        }
+        if (next >= times.length || els.video.ended) {
+          clearInterval(timer);
+          els.video.pause();
+          resolve(out);
+        }
+      }, 180);
+      els.video.addEventListener("error", () => {
+        clearInterval(timer);
+        reject(els.video.error || new Error("实时播放失败"));
+      }, { once: true });
+    });
+  }
+
+  function renderFrames() {
+    els.grid.innerHTML = "";
+    for (const frame of frames) {
+      const card = document.createElement("div");
+      card.className = frame.excluded ? "frame excluded" : "frame";
+      const img = document.createElement("img");
+      img.src = frame.dataUrl;
+      const cap = document.createElement("div");
+      cap.className = "caption";
+      const span = document.createElement("span");
+      span.textContent = `#${String(frame.index).padStart(2, "0")} @ ${frame.actualTime.toFixed(1)}s${frame.excluded ? "（已排除）" : ""}`;
+      const actions = document.createElement("div");
+      actions.className = "frameActions";
+      const toggle = document.createElement("button");
+      toggle.type = "button";
+      toggle.className = frame.excluded ? "tinyBtn restore" : "tinyBtn delete";
+      toggle.textContent = frame.excluded ? "恢复" : "排除";
+      toggle.addEventListener("click", async () => {
+        frame.excluded = !frame.excluded;
+        renderFrames();
+        contactSheetBlob = await makeContactSheet();
+        manifest = buildManifest(lastMethod || manifest?.method || "unknown");
+        const kept = keptFrames().length;
+        setStatus(`已${frame.excluded ? "排除" : "恢复"} #${String(frame.index).padStart(2, "0")}；当前保留 ${kept}/${frames.length} 张。`);
+      });
+      const a = document.createElement("a");
+      a.href = frame.dataUrl;
+      a.download = frame.filename;
+      a.textContent = "下载";
+      actions.append(toggle, a);
+      cap.append(span, actions);
+      card.append(img, cap);
+      els.grid.append(card);
+    }
+  }
+
+  async function makeContactSheet() {
+    const selected = keptFrames();
+    if (!selected.length) return null;
+    const thumbW = 480;
+    const thumbH = 280;
+    const labelH = 34;
+    const pad = 16;
+    const cols = 2;
+    const rows = Math.ceil(selected.length / cols);
+    const canvas = document.createElement("canvas");
+    canvas.width = cols * thumbW + (cols + 1) * pad;
+    canvas.height = rows * (thumbH + labelH) + (rows + 1) * pad;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#f3f4f6";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.font = "16px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+
+    for (let i = 0; i < selected.length; i += 1) {
+      const frame = selected[i];
+      const x = pad + (i % cols) * (thumbW + pad);
+      const y = pad + Math.floor(i / cols) * (thumbH + labelH + pad);
+      ctx.fillStyle = "#ffffff";
+      ctx.strokeStyle = "#d1d5db";
+      ctx.fillRect(x, y, thumbW, thumbH + labelH);
+      ctx.strokeRect(x, y, thumbW, thumbH + labelH);
+      ctx.fillStyle = "#111827";
+      ctx.fillText(`#${String(frame.index).padStart(2, "0")} @ ${frame.actualTime.toFixed(1)}s`, x + 10, y + 22);
+      const img = await loadImage(frame.dataUrl);
+      const scale = Math.min(thumbW / img.width, thumbH / img.height);
+      const w = img.width * scale;
+      const h = img.height * scale;
+      ctx.fillStyle = "#111827";
+      ctx.fillRect(x, y + labelH, thumbW, thumbH);
+      ctx.drawImage(img, x + (thumbW - w) / 2, y + labelH + (thumbH - h) / 2, w, h);
+    }
+    return await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+  }
+
+  function loadImage(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = src;
+    });
+  }
+
+  function dataUrlToBlob(dataUrl) {
+    const [head, body] = dataUrl.split(",");
+    const mime = head.match(/data:(.*);base64/)?.[1] || "image/png";
+    const bin = atob(body);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i += 1) bytes[i] = bin.charCodeAt(i);
+    return new Blob([bytes], { type: mime });
+  }
+
+  function encodeWav(audioBuffer) {
+    const channels = Math.min(2, audioBuffer.numberOfChannels);
+    const sampleRate = audioBuffer.sampleRate;
+    const samples = audioBuffer.length;
+    const bytesPerSample = 2;
+    const blockAlign = channels * bytesPerSample;
+    const dataSize = samples * blockAlign;
+    const buffer = new ArrayBuffer(44 + dataSize);
+    const view = new DataView(buffer);
+
+    function writeString(offset, text) {
+      for (let i = 0; i < text.length; i += 1) {
+        view.setUint8(offset + i, text.charCodeAt(i));
+      }
+    }
+
+    writeString(0, "RIFF");
+    view.setUint32(4, 36 + dataSize, true);
+    writeString(8, "WAVE");
+    writeString(12, "fmt ");
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, channels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * blockAlign, true);
+    view.setUint16(32, blockAlign, true);
+    view.setUint16(34, 16, true);
+    writeString(36, "data");
+    view.setUint32(40, dataSize, true);
+
+    const channelData = Array.from({ length: channels }, (_, index) => audioBuffer.getChannelData(index));
+    let offset = 44;
+    for (let i = 0; i < samples; i += 1) {
+      for (let ch = 0; ch < channels; ch += 1) {
+        const sample = Math.max(-1, Math.min(1, channelData[ch][i]));
+        view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7fff, true);
+        offset += 2;
+      }
+    }
+    return new Blob([buffer], { type: "audio/wav" });
+  }
+
+  async function maybeExtractAudio() {
+    if (!els.transcribeAudio.checked) {
+      audioExportStatus = "not_requested";
+      return null;
+    }
+    const file = els.file.files[0];
+    if (!file) {
+      audioExportStatus = "no_video_file";
+      return null;
+    }
+    try {
+      setStatus("正在尝试从视频中导出 audio.wav；如果浏览器不支持该格式，会跳过音频文件但保留转写需求。", "warn");
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) throw new Error("当前浏览器不支持 AudioContext");
+      const ctx = new AudioContextClass();
+      const buffer = await file.arrayBuffer();
+      const audioBuffer = await ctx.decodeAudioData(buffer.slice(0));
+      await ctx.close?.();
+      audioExportStatus = "exported_wav";
+      return encodeWav(audioBuffer);
+    } catch (error) {
+      audioExportStatus = `audio_export_failed: ${error.message || error}`;
+      return null;
+    }
+  }
+
+  function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  async function blobToUint8(blob) {
+    return new Uint8Array(await blob.arrayBuffer());
+  }
+
+  function stringToUint8(text) {
+    return new TextEncoder().encode(text);
+  }
+
+  function uint32(value) {
+    const bytes = new Uint8Array(4);
+    const view = new DataView(bytes.buffer);
+    view.setUint32(0, value >>> 0, true);
+    return bytes;
+  }
+
+  function uint16(value) {
+    const bytes = new Uint8Array(2);
+    const view = new DataView(bytes.buffer);
+    view.setUint16(0, value & 0xffff, true);
+    return bytes;
+  }
+
+  const crcTable = (() => {
+    const table = new Uint32Array(256);
+    for (let n = 0; n < 256; n += 1) {
+      let c = n;
+      for (let k = 0; k < 8; k += 1) {
+        c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+      }
+      table[n] = c >>> 0;
+    }
+    return table;
+  })();
+
+  function crc32(bytes) {
+    let crc = 0xffffffff;
+    for (const byte of bytes) {
+      crc = crcTable[(crc ^ byte) & 0xff] ^ (crc >>> 8);
+    }
+    return (crc ^ 0xffffffff) >>> 0;
+  }
+
+  function dosDateTime(date = new Date()) {
+    const year = Math.max(1980, date.getFullYear());
+    const dosTime = (date.getHours() << 11) | (date.getMinutes() << 5) | Math.floor(date.getSeconds() / 2);
+    const dosDate = ((year - 1980) << 9) | ((date.getMonth() + 1) << 5) | date.getDate();
+    return { dosTime, dosDate };
+  }
+
+  async function makeZip(entries) {
+    const chunks = [];
+    const central = [];
+    let offset = 0;
+    const { dosTime, dosDate } = dosDateTime();
+
+    for (const entry of entries) {
+      const nameBytes = stringToUint8(entry.name);
+      const data = entry.bytes instanceof Uint8Array ? entry.bytes : await blobToUint8(entry.bytes);
+      const crc = crc32(data);
+
+      const localParts = [
+        uint32(0x04034b50),
+        uint16(20),
+        uint16(0x0800),
+        uint16(0),
+        uint16(dosTime),
+        uint16(dosDate),
+        uint32(crc),
+        uint32(data.length),
+        uint32(data.length),
+        uint16(nameBytes.length),
+        uint16(0),
+        nameBytes,
+        data
+      ];
+      const localBlob = new Blob(localParts);
+      chunks.push(localBlob);
+
+      central.push(new Blob([
+        uint32(0x02014b50),
+        uint16(20),
+        uint16(20),
+        uint16(0x0800),
+        uint16(0),
+        uint16(dosTime),
+        uint16(dosDate),
+        uint32(crc),
+        uint32(data.length),
+        uint32(data.length),
+        uint16(nameBytes.length),
+        uint16(0),
+        uint16(0),
+        uint16(0),
+        uint16(0),
+        uint32(0),
+        uint32(offset),
+        nameBytes
+      ]));
+      offset += localBlob.size;
+    }
+
+    const centralOffset = offset;
+    const centralBlob = new Blob(central);
+    chunks.push(centralBlob);
+    offset += centralBlob.size;
+    chunks.push(new Blob([
+      uint32(0x06054b50),
+      uint16(0),
+      uint16(0),
+      uint16(entries.length),
+      uint16(entries.length),
+      uint32(centralBlob.size),
+      uint32(centralOffset),
+      uint16(0)
+    ]));
+    return new Blob(chunks, { type: "application/zip" });
+  }
+
+  function buildManifest(method, times) {
+    return {
+      case_name: els.caseName.value.trim(),
+      source_note: els.sourceUrl.value.trim(),
+      video_file: els.file.files[0]?.name || "",
+      created_at: new Date().toISOString(),
+      method,
+      settings: {
+        interval_seconds: Number(els.intervalSec.value) || 5,
+        max_frames: Number(els.maxFrames.value) || 10
+      },
+      video: {
+        duration_seconds: els.video.duration,
+        width: els.video.videoWidth,
+        height: els.video.videoHeight
+      },
+      frame_selection: {
+        total_frames: frames.length,
+        kept_frames: keptFrames().length,
+        excluded_frames: frames.filter(frame => frame.excluded).map(frame => frame.filename)
+      },
+      frames: keptFrames().map(frame => ({
+        file: frame.filename,
+        target_time_seconds: Number(frame.targetTime.toFixed(3)),
+        actual_time_seconds: Number(frame.actualTime.toFixed(3)),
+        width: frame.width,
+        height: frame.height
+      })),
+      transcription: {
+        requested: els.transcribeAudio.checked,
+        transcript_file: els.transcribeAudio.checked ? "transcript.txt" : "",
+        transcript_status: els.transcribeAudio.checked
+          ? (els.transcriptText.value.trim() ? "provided_by_user" : "requested_pending")
+          : "not_requested",
+        audio_file: audioExportStatus === "exported_wav" ? "audio.wav" : "",
+        audio_export_status: audioExportStatus
+      },
+      ai_handoff_note: "给 AI 使用时，建议提供 source_note、manifest.json、contact_sheet.png、transcript.txt（如有），以及必要的原始录屏或人工截图。"
+    };
+  }
+
+  async function run() {
+    const file = els.file.files[0];
+    if (!file) {
+      setStatus("请先选择一个视频文件。", "bad");
+      return;
+    }
+    els.runBtn.disabled = true;
+    els.saveBtn.disabled = true;
+    els.zipBtn.disabled = true;
+    els.downloadBtn.disabled = true;
+      frames = [];
+    contactSheetBlob = null;
+    manifest = null;
+    renderFrames();
+    setProgress(0, 1);
+    try {
+      await ensureMetadata();
+      const times = buildTargetTimes(els.video.duration);
+      let method = els.mode.value;
+      setStatus(`准备抽帧：${times.length} 张，目标时间 ${times.map(t => t.toFixed(1)).join(", ")}s`);
+      if (method === "auto") {
+        try {
+          const ok = await testSeek(times);
+          method = ok ? "seek" : "realtime";
+          setStatus(ok ? "跳帧测试通过，使用快速抽帧。" : "跳帧测试失败，自动切到实时播放抽帧。", ok ? "" : "warn");
+        } catch {
+          method = "realtime";
+          setStatus("跳帧测试异常，自动切到实时播放抽帧。", "warn");
+        }
+      }
+      frames = method === "seek" ? await extractBySeek(times) : await extractRealtime(times);
+      frames.forEach(frame => frame.excluded = false);
+      lastMethod = method;
+      renderFrames();
+      contactSheetBlob = await makeContactSheet();
+      manifest = buildManifest(method, times);
+      setProgress(1, 1);
+      setStatus(`完成：已生成 ${frames.length} 张抽帧，当前全部保留。实际使用模式：${method === "seek" ? "快速跳帧" : "实时播放"}`);
+      els.saveBtn.disabled = false;
+      els.zipBtn.disabled = false;
+      els.downloadBtn.disabled = false;
+    } catch (error) {
+      setStatus(`失败：${error.message || error}`, "bad");
+    } finally {
+      els.runBtn.disabled = false;
+    }
+  }
+
+  async function saveArchive() {
+    if (!frames.length || !manifest) return;
+    if (!keptFrames().length) {
+      setStatus("你已经排除了所有帧，请至少恢复一张再保存。", "bad");
+      return;
+    }
+    const dirName = safeName(els.caseName.value);
+    const audioBlob = await maybeExtractAudio();
+    manifest = buildManifest(lastMethod || manifest.method || "unknown");
+    const manifestText = JSON.stringify(manifest, null, 2);
+    const noteText = `# ${els.caseName.value.trim() || "未命名视频"}\n\n## 来源\n\n${els.sourceUrl.value.trim() || "(未填写)"}\n\n## 音频转文字\n\n${els.transcribeAudio.checked ? "需要转写。请查看 transcript.txt；如 audio.wav 存在，可用于后续转写。" : "不需要转写。"}\n\n## 使用说明\n\n- frames/：抽样截图\n- contact_sheet.png：抽样总览图\n- manifest.json：机器可读归档信息\n- transcript.txt：转写稿或待转写占位（勾选音频转文字时生成）\n- audio.wav：浏览器成功导出音频时生成\n\n`;
+    const transcriptText = els.transcriptText.value.trim() || "[待转写]\n";
+
+    if ("showDirectoryPicker" in window) {
+      let root;
+      try {
+        root = await window.showDirectoryPicker({ mode: "readwrite" });
+      } catch (error) {
+        if (error.name === "AbortError") {
+          setStatus("文件夹授权被取消了。请重新点“保存归档”并在新建文件夹后点“选择/打开”，或直接点“下载 ZIP 归档”。", "warn");
+          return;
+        }
+        throw error;
+      }
+      const folder = await root.getDirectoryHandle(dirName, { create: true });
+      const framesDir = await folder.getDirectoryHandle("frames", { create: true });
+      await writeFile(folder, "manifest.json", new Blob([manifestText], { type: "application/json" }));
+      await writeFile(folder, "note.md", new Blob([noteText], { type: "text/markdown" }));
+      if (contactSheetBlob) await writeFile(folder, "contact_sheet.png", contactSheetBlob);
+      if (els.transcribeAudio.checked) {
+        await writeFile(folder, "transcript.txt", new Blob([transcriptText], { type: "text/plain" }));
+      }
+      if (audioBlob) {
+        await writeFile(folder, "audio.wav", audioBlob);
+      }
+      for (const frame of keptFrames()) {
+        await writeFile(framesDir, frame.filename, dataUrlToBlob(frame.dataUrl));
+      }
+      setStatus(`已保存归档文件夹：${dirName}`);
+    } else {
+      downloadBlob(new Blob([manifestText], { type: "application/json" }), `${dirName}_manifest.json`);
+      downloadBlob(new Blob([noteText], { type: "text/markdown" }), `${dirName}_note.md`);
+      if (contactSheetBlob) downloadBlob(contactSheetBlob, `${dirName}_contact_sheet.png`);
+      if (els.transcribeAudio.checked) {
+        downloadBlob(new Blob([transcriptText], { type: "text/plain" }), `${dirName}_transcript.txt`);
+      }
+      if (audioBlob) {
+        downloadBlob(audioBlob, `${dirName}_audio.wav`);
+      }
+      for (const frame of keptFrames()) {
+        downloadBlob(dataUrlToBlob(frame.dataUrl), `${dirName}_${frame.filename}`);
+      }
+      setStatus("浏览器不支持直接写文件夹，已改为下载文件。");
+    }
+  }
+
+  async function downloadZipArchive() {
+    if (!frames.length || !manifest) return;
+    if (!keptFrames().length) {
+      setStatus("你已经排除了所有帧，请至少恢复一张再下载 ZIP。", "bad");
+      return;
+    }
+    const dirName = safeName(els.caseName.value);
+    const audioBlob = await maybeExtractAudio();
+    manifest = buildManifest(lastMethod || manifest.method || "unknown");
+    const manifestText = JSON.stringify(manifest, null, 2);
+    const noteText = `# ${els.caseName.value.trim() || "未命名视频"}\n\n## 来源\n\n${els.sourceUrl.value.trim() || "(未填写)"}\n\n## 音频转文字\n\n${els.transcribeAudio.checked ? "需要转写。请查看 transcript.txt；如 audio.wav 存在，可用于后续转写。" : "不需要转写。"}\n\n## 使用说明\n\n- frames/：抽样截图\n- contact_sheet.png：抽样总览图\n- manifest.json：机器可读归档信息\n- transcript.txt：转写稿或待转写占位（勾选音频转文字时生成）\n- audio.wav：浏览器成功导出音频时生成\n\n`;
+    const transcriptText = els.transcriptText.value.trim() || "[待转写]\n";
+    const entries = [
+      { name: `${dirName}/manifest.json`, bytes: stringToUint8(manifestText) },
+      { name: `${dirName}/note.md`, bytes: stringToUint8(noteText) }
+    ];
+    if (contactSheetBlob) {
+      entries.push({ name: `${dirName}/contact_sheet.png`, bytes: await blobToUint8(contactSheetBlob) });
+    }
+    if (els.transcribeAudio.checked) {
+      entries.push({ name: `${dirName}/transcript.txt`, bytes: stringToUint8(transcriptText) });
+    }
+    if (audioBlob) {
+      entries.push({ name: `${dirName}/audio.wav`, bytes: await blobToUint8(audioBlob) });
+    }
+    for (const frame of keptFrames()) {
+      entries.push({ name: `${dirName}/frames/${frame.filename}`, bytes: await blobToUint8(dataUrlToBlob(frame.dataUrl)) });
+    }
+    const zip = await makeZip(entries);
+    downloadBlob(zip, `${dirName}.zip`);
+    setStatus(`已生成 ZIP 归档：${dirName}.zip`);
+  }
+
+  async function writeFile(dir, name, blob) {
+    const handle = await dir.getFileHandle(name, { create: true });
+    const writable = await handle.createWritable();
+    await writable.write(blob);
+    await writable.close();
+  }
+
+  els.file.addEventListener("change", async () => {
+    const file = els.file.files[0];
+    if (!file) return;
+    if (objectUrl) URL.revokeObjectURL(objectUrl);
+    objectUrl = URL.createObjectURL(file);
+    els.video.src = objectUrl;
+    els.caseName.value = els.caseName.value === "V001_未命名视频" ? file.name.replace(/\.[^.]+$/, "") : els.caseName.value;
+    frames = [];
+    contactSheetBlob = null;
+    manifest = null;
+    renderFrames();
+    setProgress(0, 1);
+    setStatus("正在读取视频信息...");
+    try {
+      await ensureMetadata();
+      setStatus("视频已载入，可以开始抽帧。");
+    } catch (error) {
+      setStatus(`读取失败：${error.message || error}`, "bad");
+    }
+  });
+
+  els.runBtn.addEventListener("click", run);
+  els.transcribeAudio.addEventListener("change", () => {
+    els.transcriptBox.hidden = !els.transcribeAudio.checked;
+    if (manifest) {
+      manifest = buildManifest(lastMethod || manifest.method || "unknown");
+    }
+  });
+  els.saveBtn.addEventListener("click", () => saveArchive().catch(error => setStatus(`保存失败：${error.message || error}`, "bad")));
+  els.zipBtn.addEventListener("click", () => downloadZipArchive().catch(error => setStatus(`ZIP 生成失败：${error.message || error}`, "bad")));
+  els.downloadBtn.addEventListener("click", () => {
+    if (contactSheetBlob) downloadBlob(contactSheetBlob, `${safeName(els.caseName.value)}_contact_sheet.png`);
+  });
+</script>
+</body>
+</html>

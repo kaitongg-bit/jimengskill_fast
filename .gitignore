@@ -1,0 +1,24 @@
+# local scratch and generated intermediates
+work/
+素材收集箱/待处理/
+素材收集箱/处理中/
+素材收集箱/已完成/
+
+# original output staging kept locally
+outputs/
+!outputs/
+!outputs/.gitkeep
+
+# large/raw media
+*.mov
+*.mp4
+*.m4v
+*.wav
+*.mp3
+*.aac
+*.zip
+
+# system/editor
+.DS_Store
+*.tmp
+*.log
