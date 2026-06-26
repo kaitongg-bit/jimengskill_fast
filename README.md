@@ -30,6 +30,7 @@ skills/
   healing-original-ip-incubator.md       治愈系原创 IP 孵化助手
   original-ip-healing-food-video.md      原创 IP 治愈生活美食短片生成
   director-asset-prompt-generator.md     导演式人物场景资产提示词生成
+  nostalgic-era-video-generator.md       年代感第一人称怀旧短片生成
 
 examples/
   cat_vlog/                             萌宠拟人 Vlog 案例
@@ -40,6 +41,7 @@ docs/
   workflow.md                           完整工作流
   jimeng-skill-generation-rules.md       即梦 Skill 生成规则和 GPT 提示词
   visual-elements-formula.md             画面元素描写公式
+  nostalgic-video-formulas.md            年代感视频公式和镜头库
 
 templates/
   video-to-skill-tracker.xlsx            素材登记表
@@ -59,6 +61,10 @@ templates/
 
 - `导演式人物场景资产提示词生成`
   - 从简单创意拆解人物、场景、道具、色彩和镜头用途，再生成高质量资产 Prompt。
+
+- `年代感第一人称怀旧短片生成`
+  - 把童年、亲情、老街、市井、校园等怀旧主题拆成生图资产、人物一致性、时间轴分镜和镜头运动。
+  - 强制使用年代物件、第一人称代入、VHS/CRT旧影像质感、环境同期声和连续叙事。
 
 ## 抽帧工具能力
 
