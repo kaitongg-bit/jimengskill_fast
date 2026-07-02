@@ -31,6 +31,7 @@ skills/
   original-ip-healing-food-video.md      原创 IP 治愈生活美食短片生成
   director-asset-prompt-generator.md     导演式人物场景资产提示词生成
   nostalgic-era-video-generator.md       年代感第一人称怀旧短片生成
+  contrast-reversal-ad-generator.md      强钩子反转广告叙事生成
 
 examples/
   cat_vlog/                             萌宠拟人 Vlog 案例
@@ -65,6 +66,10 @@ templates/
 - `年代感第一人称怀旧短片生成`
   - 把童年、亲情、老街、市井、校园等怀旧主题拆成生图资产、人物一致性、时间轴分镜和镜头运动。
   - 强制使用年代物件、第一人称代入、VHS/CRT旧影像质感、环境同期声和连续叙事。
+
+- `强钩子反转广告叙事生成`
+  - 根据产品卖点选择“生活误判反差”或“超现实痛点具象化”。
+  - 支持紫外线恶魔、防晒护盾、干裂沙漠、牛奶绿洲等痛点可视化，但禁止无关炫技特效。
 
 ## 抽帧工具能力
 
