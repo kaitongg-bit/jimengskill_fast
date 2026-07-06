@@ -32,6 +32,7 @@ skills/
   director-asset-prompt-generator.md     导演式人物场景资产提示词生成
   nostalgic-era-video-generator.md       年代感第一人称怀旧短片生成
   contrast-reversal-ad-generator.md      强钩子反转广告叙事生成
+  avant-garde-real-human-portrait.md     先锋真实感 AI 人像摄影
 
 examples/
   cat_vlog/                             萌宠拟人 Vlog 案例
@@ -43,6 +44,7 @@ docs/
   jimeng-skill-generation-rules.md       即梦 Skill 生成规则和 GPT 提示词
   visual-elements-formula.md             画面元素描写公式
   nostalgic-video-formulas.md            年代感视频公式和镜头库
+  avant-garde-portrait-realism.md        先锋 AI 人像去塑料感笔记
 
 templates/
   video-to-skill-tracker.xlsx            素材登记表
@@ -70,6 +72,10 @@ templates/
 - `强钩子反转广告叙事生成`
   - 根据产品卖点选择“生活误判反差”或“超现实痛点具象化”。
   - 支持紫外线恶魔、防晒护盾、干裂沙漠、牛奶绿洲等痛点可视化，但禁止无关炫技特效。
+
+- `先锋真实感AI人像摄影`
+  - 通过皮肤毛孔、五官不对称、不均匀光影、衣物磨损、原生相机瑕疵来去除 AI 人像塑料感。
+  - 适合先锋时装摄影、街拍感人像、杂志实验影像和真实感人物资产。
 
 ## 抽帧工具能力
 
