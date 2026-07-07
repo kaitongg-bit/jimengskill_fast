@@ -33,6 +33,7 @@ skills/
   nostalgic-era-video-generator.md       年代感第一人称怀旧短片生成
   contrast-reversal-ad-generator.md      强钩子反转广告叙事生成
   avant-garde-real-human-portrait.md     先锋真实感 AI 人像摄影
+  jimeng-face-sculpting.md               人像捏脸提示词生成
 
 examples/
   cat_vlog/                             萌宠拟人 Vlog 案例
@@ -76,6 +77,10 @@ templates/
 - `先锋真实感AI人像摄影`
   - 通过皮肤毛孔、五官不对称、不均匀光影、衣物磨损、原生相机瑕疵来去除 AI 人像塑料感。
   - 适合先锋时装摄影、街拍感人像、杂志实验影像和真实感人物资产。
+
+- `人像捏脸提示词生成`
+  - 把猫系脸、狐系脸、反派脸、清冷脸、幼态脸等审美标签拆成脸型、三庭五眼、眼型、鼻子、嘴唇、折叠度、气质和妆容。
+  - 适合生成即梦 text2image/image2image 的写实人像捏脸 Prompt，避免只写抽象脸谱词。
 
 ## 抽帧工具能力
 
