@@ -34,6 +34,7 @@ skills/
   contrast-reversal-ad-generator.md      强钩子反转广告叙事生成
   avant-garde-real-human-portrait.md     先锋真实感 AI 人像摄影
   jimeng-face-sculpting.md               人像捏脸提示词生成
+  one-click-global-video-adaptation.md   一键出海短片改造
 
 examples/
   cat_vlog/                             萌宠拟人 Vlog 案例
@@ -81,6 +82,10 @@ templates/
 - `人像捏脸提示词生成`
   - 把猫系脸、狐系脸、反派脸、清冷脸、幼态脸等审美标签拆成脸型、三庭五眼、眼型、鼻子、嘴唇、折叠度、气质和妆容。
   - 适合生成即梦 text2image/image2image 的写实人像捏脸 Prompt，避免只写抽象脸谱词。
+
+- `一键出海短片改造`
+  - 将视频、剧本、提示词、图片素材或分镜工程改造成海外市场版本。
+  - 保留剧情爽点、镜头节奏和关键 reference，轻量替换人物、场景、文化符号、台词和道具。
 
 ## 抽帧工具能力
 
